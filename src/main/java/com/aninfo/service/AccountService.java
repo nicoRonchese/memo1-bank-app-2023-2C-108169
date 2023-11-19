@@ -97,13 +97,25 @@ public class AccountService {
         return account;
     }
 
+    private Double promoDeposit(Double sum){
+
+        if (sum >= 2000) {
+            if (sum<=5000){
+                sum += sum*0.1;
+            }
+            else{
+                sum +=500;
+            }
+        }
+        return sum;
+    }
     @Transactional
     public Account deposit(Long cbu, Double sum) {
 
         if (sum <= 0) {
             throw new DepositNegativeSumException("Cannot deposit negative sums");
         }
-
+        sum = promoDeposit(sum);
         Account account = accountRepository.findAccountByCbu(cbu);
         Transaction transaction = new Transaction(DEPOSIT,sum,account);
         account.setBalance(account.getBalance() + sum);
