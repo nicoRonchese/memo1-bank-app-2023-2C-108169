@@ -1,5 +1,7 @@
 package com.aninfo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 
 @Entity
@@ -14,6 +16,7 @@ public class Transaction {
     private Double amount;
     @ManyToOne
     @JoinColumn(name = "account_id")
+    @JsonIgnore
     private Account account;
 
     public Transaction() {
@@ -50,6 +53,10 @@ public class Transaction {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 }
 

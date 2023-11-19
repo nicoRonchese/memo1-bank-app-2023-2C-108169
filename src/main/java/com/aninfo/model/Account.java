@@ -28,7 +28,8 @@ public class Account {
     public Account(Double balance) {
         this.balance = balance;
         this.transactions = new ArrayList<>();
-        addTransaction(DEPOSIT,balance);
+        Transaction transaction = new Transaction(DEPOSIT,balance,this);
+        addTransaction(transaction);
     }
 
     public Long getCbu() {
@@ -46,13 +47,8 @@ public class Account {
     public void setBalance(Double balance) {
         if (this.balance == null) {
             this.transactions = new ArrayList<>();
-            addTransaction(DEPOSIT,balance);
-        }
-        else if (this.balance < balance){
-            addTransaction(DEPOSIT,balance - this.balance);
-        }
-        else if (this.balance > balance){
-            addTransaction(WITHDRAW,this.balance-balance);
+            Transaction transaction = new Transaction(DEPOSIT,balance,this);
+            addTransaction(transaction);
         }
         this.balance = balance;
     }
@@ -60,49 +56,14 @@ public class Account {
     public List<Transaction> getTransactions(){return transactions;}
 
     public void setTransactions(List<Transaction> transactions){this.transactions = transactions;}
-    
-    public Optional<Transaction> findTransaction(Long id){
-        for (Transaction item : transactions) {
-            if (item.getId().equals(id)){
-                return Optional.of(item);
-            }
-        }
-        return Optional.empty();
+
+
+    public void addTransaction(Transaction transaction){;
+        transactions.add(transaction);
     }
 
-    public void addTransaction(TransactionType type,Double sum){
-        Transaction new_transaction = new Transaction(type,sum,this);
-        transactions.add(new_transaction);
-    }
-
-    public void deleteTransaction(Long id) {
-        int delete = -1;
-        int i = 0;
-
-        for (Transaction item : transactions) {
-            if (item.getId().equals(id)) {
-                if (item.getType() == DEPOSIT) {
-                    if (balance >= item.getAmount()) {
-                        delete = i;
-                        balance = balance - item.getAmount();
-                        item.setAccount(null);
-                    } else {
-                        throw new InsufficientFundsException("Insufficient funds");
-                    }
-                } else {
-                    delete = i;
-                    balance = balance + item.getAmount();
-                    item.setAccount(null);
-                }
-                break;
-            }
-            i++;
-        }
-
-        // Correct the condition to delete if the item was found
-        if (delete >= 0) {
-            transactions.remove(delete);
-        }
+    public void deleteTransaction(Transaction transaction) {
+            transactions.remove(transaction);
     }
 
 }

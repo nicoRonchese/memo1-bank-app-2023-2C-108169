@@ -5,6 +5,7 @@ import com.aninfo.exceptions.InsufficientFundsException;
 import com.aninfo.model.Account;
 import com.aninfo.model.Transaction;
 import com.aninfo.repository.AccountRepository;
+import com.aninfo.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,14 +14,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import static com.aninfo.model.TransactionType.DEPOSIT;
+import static com.aninfo.model.TransactionType.WITHDRAW;
+
 @Service
 public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     public Account createAccount(Account account) {
-        return accountRepository.save(account);
+        accountRepository.save(account);
+        transactionRepository.save(account.getTransactions().get(0));
+        return account;
     }
 
     public Collection<Account> getAccounts() {
@@ -31,8 +39,7 @@ public class AccountService {
         return accountRepository.findById(cbu);
     }
 
-    public void save(Account account) {
-        accountRepository.save(account);
+    public void save(Account account) {accountRepository.save(account);
     }
 
     public void deleteById(Long cbu) {
@@ -47,18 +54,30 @@ public class AccountService {
         return Optional.empty();
     }
 
-    public Optional<Transaction> getTransactionFromAccount(Long cbu,Long transaction_id){
-        Optional<Account> account = findById(cbu);
-        if (account.isPresent()){
-            return account.get().findTransaction(transaction_id);
-        }
-        return Optional.empty();
+    public Optional<Transaction> getTransaction(Long transaction_id){
+        return transactionRepository.findById(transaction_id);
     }
 
-    public void deleteTransactionFromAccount(Long cbu,Long id) {
-        Account account = accountRepository.findAccountByCbu(cbu);
-        account.deleteTransaction(id);
+    public void deleteTransaction(Long id) {
+        Transaction transaction = transactionRepository.findTransactionByid(id);
+        Account account = transaction.getAccount();
+        if (transaction.getType().equals(DEPOSIT)){
+            if (transaction.getAmount()<account.getBalance()){
+                account.setBalance(account.getBalance() - transaction.getAmount());
+                transaction.setAccount(null);
+            }
+            else{
+                throw new InsufficientFundsException("Insufficient funds");
+            }
+        }
+        else{
+            account.setBalance(account.getBalance() + transaction.getAmount());
+            transaction.setAccount(null);
+        }
+        account.deleteTransaction(transaction);
         accountRepository.save(account);
+        transactionRepository.deleteById(transaction.getId());
+
 
     }
 
@@ -69,8 +88,11 @@ public class AccountService {
         if (account.getBalance() < sum) {
             throw new InsufficientFundsException("Insufficient funds");
         }
+        Transaction transaction = new Transaction(WITHDRAW,sum,account);
         account.setBalance(account.getBalance() - sum);
+        //account.addTransaction(transaction);
         accountRepository.save(account);
+        transactionRepository.save(transaction);
 
         return account;
     }
@@ -83,8 +105,11 @@ public class AccountService {
         }
 
         Account account = accountRepository.findAccountByCbu(cbu);
+        Transaction transaction = new Transaction(DEPOSIT,sum,account);
         account.setBalance(account.getBalance() + sum);
+        //account.addTransaction(transaction);
         accountRepository.save(account);
+        transactionRepository.save(transaction);
 
         return account;
     }

@@ -55,9 +55,9 @@ public class Memo1BankApp {
 		return ResponseEntity.of(transactionsOptional);
 	}
 
-	@GetMapping("/accounts/transactions/{cbu}/{id}")
-	public ResponseEntity<Transaction> getTransactionFromAccount(@PathVariable Long cbu,@PathVariable Long id) {
-		Optional<Transaction> transactionOptional = accountService.getTransactionFromAccount(cbu,id);
+	@GetMapping("/transactions/{id}")
+	public ResponseEntity<Transaction> getTransaction(@PathVariable Long id) {
+		Optional<Transaction> transactionOptional = accountService.getTransaction(id);
 		return ResponseEntity.of(transactionOptional);
 	}
 
@@ -79,9 +79,9 @@ public class Memo1BankApp {
 		accountService.deleteById(cbu);
 	}
 
-	@DeleteMapping("/accounts/transactions/{cbu}/{id}")
-	public void deleteTransactionFromAccount(@PathVariable Long cbu,@PathVariable Long id) {
-		accountService.deleteTransactionFromAccount(cbu,id);
+	@DeleteMapping("/transactions/{id}")
+	public void deleteTransaction(@PathVariable Long id) {
+		accountService.deleteTransaction(id);
 	}
 
 	@PutMapping("/accounts/{cbu}/withdraw")
