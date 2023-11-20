@@ -3,6 +3,7 @@ package com.aninfo;
 import com.aninfo.model.Account;
 import com.aninfo.model.Transaction;
 import com.aninfo.service.AccountService;
+import com.aninfo.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,6 +29,9 @@ public class Memo1BankApp {
 
 	@Autowired
 	private AccountService accountService;
+
+	@Autowired
+	private TransactionService transactionService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(Memo1BankApp.class, args);
@@ -57,7 +61,7 @@ public class Memo1BankApp {
 
 	@GetMapping("/transactions/{id}")
 	public ResponseEntity<Transaction> getTransaction(@PathVariable Long id) {
-		Optional<Transaction> transactionOptional = accountService.getTransaction(id);
+		Optional<Transaction> transactionOptional = transactionService.getTransaction(id);
 		return ResponseEntity.of(transactionOptional);
 	}
 
@@ -81,17 +85,26 @@ public class Memo1BankApp {
 
 	@DeleteMapping("/transactions/{id}")
 	public void deleteTransaction(@PathVariable Long id) {
-		accountService.deleteTransaction(id);
+		Account account  = transactionService.deleteTransaction(id);
+		accountService.save(account);
 	}
 
 	@PutMapping("/accounts/{cbu}/withdraw")
 	public Account withdraw(@PathVariable Long cbu, @RequestParam Double sum) {
-		return accountService.withdraw(cbu, sum);
+		Optional<Account> accountOptional = accountService.findById(cbu);
+		Account account = accountService.findById(cbu).get();
+		account  = transactionService.withdraw(account,sum);
+		accountService.save(account);
+		return account;
 	}
 
 	@PutMapping("/accounts/{cbu}/deposit")
 	public Account deposit(@PathVariable Long cbu, @RequestParam Double sum) {
-		return accountService.deposit(cbu, sum);
+		Optional<Account> accountOptional = accountService.findById(cbu);
+		Account account = accountOptional.get();
+		account  = transactionService.deposit(account,sum);
+		accountService.save(account);
+		return account;
 	}
 
 	@Bean

@@ -22,12 +22,11 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
+    //private TransactionRepository transactionRepository;
 
     public Account createAccount(Account account) {
         accountRepository.save(account);
-        transactionRepository.save(account.getTransactions().get(0));
+        //transactionRepository.save(account.getTransactions().get(0));
         return account;
     }
 
@@ -52,78 +51,6 @@ public class AccountService {
             return Optional.of(account.get().getTransactions());
         }
         return Optional.empty();
-    }
-
-    public Optional<Transaction> getTransaction(Long transaction_id){
-        return transactionRepository.findById(transaction_id);
-    }
-
-    public void deleteTransaction(Long id) {
-        Transaction transaction = transactionRepository.findTransactionByid(id);
-        Account account = transaction.getAccount();
-        if (transaction.getType().equals(DEPOSIT)){
-            if (transaction.getAmount()<account.getBalance()){
-                account.setBalance(account.getBalance() - transaction.getAmount());
-                transaction.setAccount(null);
-            }
-            else{
-                throw new InsufficientFundsException("Insufficient funds");
-            }
-        }
-        else{
-            account.setBalance(account.getBalance() + transaction.getAmount());
-            transaction.setAccount(null);
-        }
-        account.deleteTransaction(transaction);
-        accountRepository.save(account);
-        transactionRepository.deleteById(transaction.getId());
-
-
-    }
-
-    @Transactional
-    public Account withdraw(Long cbu, Double sum) {
-        Account account = accountRepository.findAccountByCbu(cbu);
-
-        if (account.getBalance() < sum) {
-            throw new InsufficientFundsException("Insufficient funds");
-        }
-        Transaction transaction = new Transaction(WITHDRAW,sum,account);
-        account.setBalance(account.getBalance() - sum);
-        //account.addTransaction(transaction);
-        accountRepository.save(account);
-        transactionRepository.save(transaction);
-
-        return account;
-    }
-
-    private Double promoDeposit(Double sum){
-
-        if (sum >= 2000) {
-            if (sum<=5000){
-                sum += sum*0.1;
-            }
-            else{
-                sum +=500;
-            }
-        }
-        return sum;
-    }
-    @Transactional
-    public Account deposit(Long cbu, Double sum) {
-
-        if (sum <= 0) {
-            throw new DepositNegativeSumException("Cannot deposit negative sums");
-        }
-        sum = promoDeposit(sum);
-        Account account = accountRepository.findAccountByCbu(cbu);
-        Transaction transaction = new Transaction(DEPOSIT,sum,account);
-        account.setBalance(account.getBalance() + sum);
-        //account.addTransaction(transaction);
-        accountRepository.save(account);
-        transactionRepository.save(transaction);
-
-        return account;
     }
 
 }
